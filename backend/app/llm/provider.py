@@ -41,7 +41,38 @@ def _client():
     return OpenAI(**kwargs)
 
 
-# ---------- 텍스트 분류용 ----------
+def _model_chain(raw: str) -> list[str]:
+    """"a,b,c" → [a, b, c] — 무료 모델 스로틀 대비 폴백 체인."""
+    return [m.strip() for m in (raw or "").split(",") if m.strip()]
+
+
+def _chat_text(client, messages: list[dict], temperature: float = 0) -> str:
+    """체인 순서대로 시도, 전부 실패 시 예외. 성공 시 응답 텍스트 반환."""
+    last: Exception | None = None
+    for model in _model_chain(settings.text_model):
+        try:
+            resp = client.chat.completions.create(
+                model=model, messages=messages, temperature=temperature)
+            return resp.choices[0].message.content or ""
+        except Exception as e:
+            last = e
+            continue
+    raise last or RuntimeError("no text model configured")
+
+
+def _chat_vision(client, messages: list[dict]) -> str:
+    last: Exception | None = None
+    for model in _model_chain(settings.vision_model):
+        try:
+            resp = client.chat.completions.create(
+                model=model, messages=messages, temperature=0)
+            return resp.choices[0].message.content or ""
+        except Exception as e:
+            last = e
+            continue
+    raise last or RuntimeError("no vision model configured")
+
+
 def _heuristic_batch(items: list[dict]) -> list[dict]:
     return [heuristic_classify(it["merchant"]) | {"id": it["id"]} for it in items]
 
@@ -53,12 +84,9 @@ def batch_classify(items: list[dict]) -> list[dict]:
         return _heuristic_batch(items)
     payload = json.dumps(items, ensure_ascii=False)
     try:
-        resp = client.chat.completions.create(
-            model=settings.text_model,
-            messages=[{"role": "user", "content": prompts.BATCH_CLASSIFY_PROMPT.format(transactions=payload)}],
-            temperature=0,
-        )
-        return json.loads(_extract_json(resp.choices[0].message.content or "[]"))
+        text = _chat_text(client, [
+            {"role": "user", "content": prompts.BATCH_CLASSIFY_PROMPT.format(transactions=payload)}])
+        return json.loads(_extract_json(text or "[]"))
     except Exception:
         # rate-limit/네트워크/파싱 실패 시 휴리스틱 폴백 (500 방지)
         return _heuristic_batch(items)
@@ -69,19 +97,12 @@ def infer_column_mapping(headers: list[str], sample_row: dict) -> dict:
     if client is None:
         return heuristic_column_mapping(headers)
     try:
-        resp = client.chat.completions.create(
-            model=settings.text_model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompts.COLUMN_MAPPING_PROMPT.format(
-                        headers=headers, sample_row=json.dumps(sample_row, ensure_ascii=False)
-                    ),
-                }
-            ],
-            temperature=0,
-        )
-        return json.loads(_extract_json(resp.choices[0].message.content or "{}"))
+        text = _chat_text(client, [{
+            "role": "user",
+            "content": prompts.COLUMN_MAPPING_PROMPT.format(
+                headers=headers, sample_row=json.dumps(sample_row, ensure_ascii=False)),
+        }])
+        return json.loads(_extract_json(text or "{}"))
     except Exception:
         return heuristic_column_mapping(headers)
 
@@ -91,12 +112,10 @@ def generate_tips(stats: dict) -> list[dict]:
     if client is None:
         return heuristic_tips(stats)
     try:
-        resp = client.chat.completions.create(
-            model=settings.text_model,
-            messages=[{"role": "user", "content": prompts.TIPS_PROMPT.format(stats=json.dumps(stats, ensure_ascii=False))}],
-            temperature=0.3,
-        )
-        out = json.loads(_extract_json(resp.choices[0].message.content or "[]"))
+        text = _chat_text(client, [
+            {"role": "user", "content": prompts.TIPS_PROMPT.format(stats=json.dumps(stats, ensure_ascii=False))}],
+            temperature=0.3)
+        out = json.loads(_extract_json(text or "[]"))
         return out if isinstance(out, list) else heuristic_tips(stats)
     except Exception:
         return heuristic_tips(stats)
@@ -115,18 +134,14 @@ def extract_receipt(image_bytes: bytes) -> dict:
                 "items": [], "confidence": 0.3, "raw_text": "mock (API 키 없음)"}
     b64 = base64.b64encode(image_bytes).decode()
     try:
-        resp = client.chat.completions.create(
-            model=settings.vision_model,
-            messages=[{
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompts.RECEIPT_PROMPT},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
-                ],
-            }],
-            temperature=0,
-        )
-        return json.loads(_extract_json(resp.choices[0].message.content or "{}"))
+        text = _chat_vision(client, [{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompts.RECEIPT_PROMPT},
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
+            ],
+        }])
+        return json.loads(_extract_json(text or "{}"))
     except Exception as e:
         return _receipt_fallback(raw=f"LLM 오류: {type(e).__name__}")
 
