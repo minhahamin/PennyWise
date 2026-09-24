@@ -9,22 +9,29 @@ export default function Transactions() {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
   const [onlyReview, setOnlyReview] = useState(false);
+  const [page, setPage] = useState(0);
+  const [total, setTotal] = useState(0);
+  const PAGE_SIZE = 20;
 
-  const load = () => {
-    const p: Record<string, string> = {};
+  const load = (p0 = page) => {
+    const p: Record<string, string> = { limit: String(PAGE_SIZE), offset: String(p0 * PAGE_SIZE) };
     if (q) p.q = q;
     if (cat) p.category = cat;
     if (onlyReview) p.needs_review = 'true';
-    api.transactions(p).then(setRows).catch(() => setRows([]));
+    api.transactions(p).then((r) => { setRows(r.items ?? []); setTotal(r.total ?? 0); })
+      .catch(() => { setRows([]); setTotal(0); });
   };
 
-  useEffect(load, []);
+  useEffect(() => { load(0); }, []);
+
+  const go = (np: number) => { setPage(np); load(np); };
+  const search = () => { setPage(0); load(0); };
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const fix = async (id: number, category: string) => {
     await api.correct(id, category);
     load();
   };
-
   return (
     <div>
       <div className="toolbar">
@@ -34,7 +41,7 @@ export default function Transactions() {
           {CATS.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
         <label><input type="checkbox" checked={onlyReview} onChange={(e) => setOnlyReview(e.target.checked)} /> 확인 필요만</label>
-        <button onClick={load}>조회</button>
+        <button onClick={search}>조회</button>
       </div>
       <table className="tbl">
         <thead><tr><th>날짜</th><th>가맹점</th><th>금액</th><th>카테고리</th><th>출처</th><th>수정</th></tr></thead>
@@ -62,6 +69,11 @@ export default function Transactions() {
         </tbody>
       </table>
       {rows.length === 0 && <p className="muted">거래가 없습니다. 업로드 탭에서 샘플 CSV를 올려보세요.</p>}
+      <div className="toolbar" style={{ marginTop: 12 }}>
+        <button disabled={page <= 0} onClick={() => go(page - 1)}>‹ 이전</button>
+        <span className="muted">{page + 1} / {pages} 페이지 (총 {total}건)</span>
+        <button disabled={page + 1 >= pages} onClick={() => go(page + 1)}>다음 ›</button>
+      </div>
     </div>
   );
 }

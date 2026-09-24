@@ -14,9 +14,9 @@ router = APIRouter(tags=["transactions"])
 @router.get("/transactions")
 def list_transactions(category: str | None = None, start: date | None = None,
                       end: date | None = None, q: str | None = None,
-                      needs_review: bool = False, limit: int = 200,
+                      needs_review: bool = False, limit: int = 20, offset: int = 0,
                       db: Session = Depends(get_db)):
-    query = db.query(Transaction).order_by(Transaction.date.desc())
+    query = db.query(Transaction).order_by(Transaction.date.desc(), Transaction.id.desc())
     if category:
         query = query.filter(Transaction.category == category)
     if start:
@@ -27,12 +27,14 @@ def list_transactions(category: str | None = None, start: date | None = None,
         query = query.filter(Transaction.merchant.contains(q))
     if needs_review:
         query = query.filter(Transaction.confidence < 0.6)
-    rows = query.limit(limit).all()
-    return [{"id": t.id, "date": t.date.isoformat(), "merchant": t.merchant,
+    total = query.count()
+    rows = query.offset(offset).limit(min(limit, 100)).all()
+    return {"items": [{"id": t.id, "date": t.date.isoformat(), "merchant": t.merchant,
              "amount": t.amount, "category": t.category, "subcategory": t.subcategory,
              "confidence": t.confidence, "source": t.source,
              "receipt_image_path": t.receipt_image_path, "memo": t.memo,
-             "needs_review": t.confidence < 0.6} for t in rows]
+             "needs_review": t.confidence < 0.6} for t in rows],
+            "total": total, "limit": limit, "offset": offset}
 
 
 class CorrectIn(BaseModel):
