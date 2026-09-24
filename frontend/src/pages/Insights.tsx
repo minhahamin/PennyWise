@@ -9,7 +9,7 @@ export default function Insights() {
   const [report, setReport] = useState<any>(null);
 
   const load = () => api.report(y, m).then(setReport).catch(() => setReport(null));
-  useEffect(load, []);
+  useEffect(() => { load(); }, []);
 
   return (
     <div>
