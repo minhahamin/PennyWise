@@ -60,7 +60,7 @@ export default function Dashboard() {
         </section>
       </div>
 
-      <section className="panel">
+      <section className="panel" style={{ marginTop: 16 }}>
         <h3>카테고리 Top 지출</h3>
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={donut.map((d) => ({ ...d }))}>
