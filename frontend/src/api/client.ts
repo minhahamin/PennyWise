@@ -33,6 +33,7 @@ export const api = {
     return res.json();
   },
   report: (y: number, m: number) => req(`/report/monthly/${y}/${m}`),
+  uploadHistory: () => req('/upload/history'),
   alerts: (y: number, m: number) => req(`/alerts?year=${y}&month=${m}`),
   setBudget: (category: string, year: number, month: number, budgeted_amount: number) =>
     req('/budget', {

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { api } from '../api/client';
+import { useEffect, useState } from 'react';
+import { API_BASE, api } from '../api/client';
 
 const STAGES = ['분석중', '분류중', '저장중', '완료'];
 
@@ -7,6 +7,10 @@ export default function Upload() {
   const [stage, setStage] = useState<string>('');
   const [result, setResult] = useState<any>(null);
   const [drag, setDrag] = useState(false);
+  const [history, setHistory] = useState<any[]>([]);
+
+  const loadHistory = () => api.uploadHistory().then(setHistory).catch(() => {});
+  useEffect(() => { loadHistory(); }, []);
 
   const runStages = async (fn: () => Promise<any>) => {
     setResult(null);
@@ -16,6 +20,7 @@ export default function Upload() {
     }
     try {
       setResult(await fn());
+      loadHistory();
     } catch (e: any) {
       setResult({ error: String(e.message ?? e) });
     } finally {
@@ -56,6 +61,29 @@ export default function Upload() {
         <h3>처리 상태: {stage || '대기 중'}</h3>
         <div className="stages">{STAGES.map((s) => <span key={s} className={STAGES.indexOf(s) <= STAGES.indexOf(stage) ? 'on' : ''}>{s}</span>)}</div>
         {result && <pre>{JSON.stringify(result, null, 2)}</pre>}
+      </section>
+      <section className="panel" style={{ gridColumn: '1 / -1' }}>
+        <h3>업로드 내역</h3>
+        {history.length === 0 && <p className="muted">아직 업로드 내역이 없습니다.</p>}
+        <table className="tbl">
+          <tbody>
+            {history.map((h) => (
+              <tr key={h.id}>
+                <td>{h.kind === 'csv' ? '📄 CSV' : '🧾 영수증'}</td>
+                <td>
+                  {h.image && (
+                    <img src={`${API_BASE}/uploads/${h.image}`} alt="영수증" width={36} height={36}
+                      style={{ objectFit: 'cover', borderRadius: 6, marginRight: 6, verticalAlign: 'middle' }} />
+                  )}
+                  {h.filename}
+                  {h.note && <div className="muted">{h.note}</div>}
+                </td>
+                <td className="num">{h.saved}건 저장{h.skipped_duplicates > 0 && ` · 중복 ${h.skipped_duplicates}건`}</td>
+                <td className="muted">{new Date(h.created_at).toLocaleString('ko-KR')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
     </div>
   );

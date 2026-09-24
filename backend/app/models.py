@@ -64,3 +64,19 @@ class Budget(Base):
     year: Mapped[int] = mapped_column(Integer)
     month: Mapped[int] = mapped_column(Integer)
     budgeted_amount: Mapped[float] = mapped_column(Float)
+
+
+class UploadHistory(Base):
+    """CSV/영수증 업로드 이력 (업로드 탭 내역 표시용)."""
+
+    __tablename__ = "upload_history"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    kind: Mapped[str] = mapped_column(String(16), index=True)  # csv | receipt
+    filename: Mapped[str] = mapped_column(String(255))
+    total_rows: Mapped[int] = mapped_column(Integer, default=0)
+    saved: Mapped[int] = mapped_column(Integer, default=0)
+    skipped_duplicates: Mapped[int] = mapped_column(Integer, default=0)
+    image_path: Mapped[str] = mapped_column(String(512), default="")  # 영수증 썸네일용
+    note: Mapped[str] = mapped_column(String(255), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

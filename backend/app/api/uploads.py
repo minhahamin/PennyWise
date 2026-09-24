@@ -15,7 +15,7 @@ from app.config import settings
 from app.database import get_db
 from app.graph.workflow import upload_graph
 from app.llm import provider as llm
-from app.models import Transaction
+from app.models import Transaction, UploadHistory
 from app.schemas import ReceiptExtraction
 from app.services import csv_mapper, dedup
 from app.services.categorizer import classify_batch
@@ -45,10 +45,14 @@ async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
         {"date": n["date"].isoformat(), "merchant": n["merchant"],
          "amount": n["amount"], "memo": n["memo"]} for n in normalized_all],
         "source": "csv"})
+    skipped = result.get("skipped_duplicates", 0)
+    saved = len(normalized_all) - skipped
+    db.add(UploadHistory(kind="csv", filename=file.filename or "upload.csv",
+                         total_rows=len(df), saved=saved, skipped_duplicates=skipped))
+    db.commit()
     return {"filename": file.filename, "mapping": mapping.model_dump(),
             "parsed": len(df), "normalized": len(normalized_all),
-            "skipped_duplicates": result.get("skipped_duplicates", 0),
-            "saved": len(normalized_all) - result.get("skipped_duplicates", 0)}
+            "skipped_duplicates": skipped, "saved": saved}
 
 
 @router.get("/csv/progress")
@@ -78,6 +82,10 @@ async def upload_receipt(file: UploadFile = File(...), db: Session = Depends(get
                                 raw_text=str(extracted.get("raw_text", "")))
     rdate = rec.date or date.today()
     if dedup.is_duplicate(db, rdate, rec.merchant, rec.total_amount):
+        db.add(UploadHistory(kind="receipt", filename=file.filename or "receipt",
+                             total_rows=1, saved=0, skipped_duplicates=1,
+                             image_path=path, note=f"중복: {rec.merchant} {rec.total_amount:,.0f}원"))
+        db.commit()
         return {"duplicate": True, "receipt": rec.model_dump(), "image_path": path}
     cats = classify_batch(db, [rec.merchant])
     c = cats[0]
@@ -87,6 +95,20 @@ async def upload_receipt(file: UploadFile = File(...), db: Session = Depends(get
                       source="receipt", receipt_image_path=path,
                       memo="; ".join(i.name for i in rec.items[:5]))
     db.add(txn)
+    db.add(UploadHistory(kind="receipt", filename=file.filename or "receipt",
+                         total_rows=1, saved=1, skipped_duplicates=0,
+                         image_path=path,
+                         note=f"{rec.merchant} {rec.total_amount:,.0f}원 → {c['category']}"))
     db.commit()
     return {"duplicate": False, "receipt": rec.model_dump(),
             "transaction_id": txn.id, "category": c, "image_path": path}
+
+
+@router.get("/history")
+def upload_history(limit: int = 20, db: Session = Depends(get_db)):
+    rows = db.query(UploadHistory).order_by(UploadHistory.id.desc()).limit(limit).all()
+    return [{"id": h.id, "kind": h.kind, "filename": h.filename,
+             "total_rows": h.total_rows, "saved": h.saved,
+             "skipped_duplicates": h.skipped_duplicates,
+             "image": os.path.basename(h.image_path) if h.image_path else "",
+             "note": h.note, "created_at": h.created_at.isoformat()} for h in rows]
