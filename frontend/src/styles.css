@@ -40,6 +40,9 @@ main { margin-top: 16px; }
 .toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
 .drop { border: 2px dashed var(--line); border-radius: 12px; padding: 24px; text-align: center; }
 .drop.over { border-color: #3b82f6; background: #3b82f622; }
+.file-btn { display: inline-block; margin-top: 12px; padding: 10px 18px; border-radius: 12px;
+  background: #3b82f6; color: #fff; font-weight: 700; cursor: pointer; border: none; }
+.file-btn:hover { background: #2563eb; }
 .stages { display: flex; gap: 8px; }
 .stages span { padding: 4px 10px; border-radius: 999px; background: var(--line); font-size: 12px; }
 .stages .on { background: #3b82f6; color: white; }

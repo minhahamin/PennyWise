@@ -37,13 +37,19 @@ export default function Upload() {
           onDrop={(e) => { e.preventDefault(); setDrag(false); onCsv(e.dataTransfer.files?.[0]); }}
         >
           여기로 CSV 파일을 드래그하거나
-          <input type="file" accept=".csv" onChange={(e) => onCsv(e.target.files?.[0])} />
+          <label className="file-btn">
+            📂 CSV 파일 선택
+            <input type="file" accept=".csv" hidden onChange={(e) => onCsv(e.target.files?.[0])} />
+          </label>
         </div>
         <p className="muted">은행/카드사 포맷이 달라도 컬럼을 자동 매핑합니다.</p>
       </section>
       <section className="panel">
         <h3>영수증 업로드 (모바일 촬영 지원)</h3>
-        <input type="file" accept="image/*" capture="environment" onChange={(e) => onReceipt(e.target.files?.[0])} />
+        <label className="file-btn">
+          📸 영수증 촬영 / 선택
+          <input type="file" accept="image/*" capture="environment" hidden onChange={(e) => onReceipt(e.target.files?.[0])} />
+        </label>
         <p className="muted">비전 LLM이 가맹점·날짜·총액·품목을 추출합니다.</p>
       </section>
       <section className="panel">
