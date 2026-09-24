@@ -85,6 +85,12 @@ export default function Upload() {
                   {h.kind === 'csv' && h.image && (
                     <button onClick={() => api.csvPreview(h.id).then(setPreview).catch(() => {})}>미리보기</button>
                   )}
+                  {h.kind === 'receipt' && (
+                    <button onClick={() => {
+                      if (!confirm('저장된 원본 이미지로 다시 판독할까요?')) return;
+                      api.retryReceipt(h.id).then((r) => { alert(r.ok ? '판독 성공!' : (r.message ?? '판독 실패')); loadHistory(); });
+                    }}>재시도</button>
+                  )}
                 </td>
                 <td className="num">{h.saved}건 저장{h.skipped_duplicates > 0 && ` · 중복 ${h.skipped_duplicates}건`}</td>
                 <td className="muted">{new Date(h.created_at).toLocaleString('ko-KR')}</td>

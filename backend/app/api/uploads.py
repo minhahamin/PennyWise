@@ -139,3 +139,46 @@ def preview_csv(history_id: int, n: int = 10, db: Session = Depends(get_db)):
     return {"filename": h.filename, "columns": list(df.columns),
             "rows": df.head(n).fillna("").to_dict(orient="records"),
             "total": len(df)}
+
+
+@router.post("/retry/{history_id}")
+def retry_receipt(history_id: int, db: Session = Depends(get_db)):
+    """판독 실패 영수증 재시도 — 저장된 원본 이미지로 비전 추출 다시 실행."""
+    h = db.query(UploadHistory).filter_by(id=history_id, kind="receipt").first()
+    if not h or not h.image_path or not os.path.exists(h.image_path):
+        return JSONResponse({"error": "원본 이미지가 없습니다"}, status_code=404)
+    with open(h.image_path, "rb") as f:
+        extracted = llm.extract_receipt(f.read())
+    try:
+        rec = ReceiptExtraction(**extracted)
+    except Exception:
+        rec = ReceiptExtraction(merchant=extracted.get("merchant", "판독실패"),
+                                total_amount=float(extracted.get("total_amount", 0) or 0),
+                                confidence=float(extracted.get("confidence", 0.1)),
+                                raw_text=str(extracted.get("raw_text", "")))
+    if not rec.total_amount or rec.merchant in ("판독실패", "모의상점"):
+        h.note = f"재시도 실패 ({h.note})" if "재시도" not in h.note else h.note
+        db.commit()
+        return {"ok": False, "receipt": rec.model_dump(),
+                "message": "이번에도 판독에 실패했습니다. 나중에 다시 시도하세요."}
+    rdate = rec.date or date.today()
+    cats = classify_batch(db, [rec.merchant])
+    c = cats[0]
+    txn = db.query(Transaction).filter_by(receipt_image_path=h.image_path).first()
+    if txn:
+        txn.date, txn.merchant, txn.amount = rdate, rec.merchant, rec.total_amount
+        txn.category, txn.subcategory = c["category"], c["subcategory"]
+        txn.confidence = min(c["confidence"], rec.confidence or 1.0)
+        txn.memo = "; ".join(i.name for i in rec.items[:5])
+    else:
+        txn = Transaction(date=rdate, merchant=rec.merchant, amount=rec.total_amount,
+                          category=c["category"], subcategory=c["subcategory"],
+                          confidence=min(c["confidence"], rec.confidence or 1.0),
+                          source="receipt", receipt_image_path=h.image_path,
+                          memo="; ".join(i.name for i in rec.items[:5]))
+        db.add(txn)
+    h.saved = 1
+    h.note = f"{rec.merchant} {rec.total_amount:,.0f}원 → {c['category']} (재추출)"
+    db.commit()
+    return {"ok": True, "receipt": rec.model_dump(),
+            "transaction_id": txn.id, "category": c}

@@ -35,6 +35,7 @@ export const api = {
   report: (y: number, m: number) => req(`/report/monthly/${y}/${m}`),
   uploadHistory: () => req('/upload/history'),
   csvPreview: (id: number) => req(`/upload/preview/${id}`),
+  retryReceipt: (id: number) => req(`/upload/retry/${id}`, { method: 'POST' }),
   alerts: (y: number, m: number) => req(`/alerts?year=${y}&month=${m}`),
   setBudget: (category: string, year: number, month: number, budgeted_amount: number) =>
     req('/budget', {
