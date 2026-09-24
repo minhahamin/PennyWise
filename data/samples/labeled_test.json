@@ -1,0 +1,402 @@
+[
+  {
+    "merchant": "카카오T택시",
+    "expected": "교통"
+  },
+  {
+    "merchant": "SKT 통신요금",
+    "expected": "고정비"
+  },
+  {
+    "merchant": "쿠팡와우",
+    "expected": "구독"
+  },
+  {
+    "merchant": "스타벅스 강남점",
+    "expected": "카페"
+  },
+  {
+    "merchant": "SKT 통신요금",
+    "expected": "고정비"
+  },
+  {
+    "merchant": "스타벅스 강남점",
+    "expected": "카페"
+  },
+  {
+    "merchant": "메가커피",
+    "expected": "카페"
+  },
+  {
+    "merchant": "넷플릭스",
+    "expected": "구독"
+  },
+  {
+    "merchant": "스타벅스 강남점",
+    "expected": "카페"
+  },
+  {
+    "merchant": "배달의민족",
+    "expected": "식비"
+  },
+  {
+    "merchant": "스타벅스 강남점",
+    "expected": "카페"
+  },
+  {
+    "merchant": "교보문고",
+    "expected": "교육"
+  },
+  {
+    "merchant": "쿠팡",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "SKT 통신요금",
+    "expected": "고정비"
+  },
+  {
+    "merchant": "이마트 성수점",
+    "expected": "식비"
+  },
+  {
+    "merchant": "요기요",
+    "expected": "식비"
+  },
+  {
+    "merchant": "메가커피",
+    "expected": "카페"
+  },
+  {
+    "merchant": "요기요",
+    "expected": "식비"
+  },
+  {
+    "merchant": "쿠팡",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "GS25 역삼점",
+    "expected": "식비"
+  },
+  {
+    "merchant": "넷플릭스",
+    "expected": "구독"
+  },
+  {
+    "merchant": "배달의민족",
+    "expected": "식비"
+  },
+  {
+    "merchant": "GS25 역삼점",
+    "expected": "식비"
+  },
+  {
+    "merchant": "이마트 성수점",
+    "expected": "식비"
+  },
+  {
+    "merchant": "이마트 성수점",
+    "expected": "식비"
+  },
+  {
+    "merchant": "SKT 통신요금",
+    "expected": "고정비"
+  },
+  {
+    "merchant": "지하철 정기권",
+    "expected": "교통"
+  },
+  {
+    "merchant": "카카오T택시",
+    "expected": "교통"
+  },
+  {
+    "merchant": "쿠팡",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "배달의민족",
+    "expected": "식비"
+  },
+  {
+    "merchant": "SKT 통신요금",
+    "expected": "고정비"
+  },
+  {
+    "merchant": "요기요",
+    "expected": "식비"
+  },
+  {
+    "merchant": "무신사",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "이마트 성수점",
+    "expected": "식비"
+  },
+  {
+    "merchant": "쿠팡와우",
+    "expected": "구독"
+  },
+  {
+    "merchant": "카카오T택시",
+    "expected": "교통"
+  },
+  {
+    "merchant": "요기요",
+    "expected": "식비"
+  },
+  {
+    "merchant": "쿠팡",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "스타벅스 강남점",
+    "expected": "카페"
+  },
+  {
+    "merchant": "스타벅스 강남점",
+    "expected": "카페"
+  },
+  {
+    "merchant": "이마트 성수점",
+    "expected": "식비"
+  },
+  {
+    "merchant": "무신사",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "무신사",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "배달의민족",
+    "expected": "식비"
+  },
+  {
+    "merchant": "SKT 통신요금",
+    "expected": "고정비"
+  },
+  {
+    "merchant": "교보문고",
+    "expected": "교육"
+  },
+  {
+    "merchant": "올리브영",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "GS25 역삼점",
+    "expected": "식비"
+  },
+  {
+    "merchant": "스타벅스 강남점",
+    "expected": "카페"
+  },
+  {
+    "merchant": "스타벅스 강남점",
+    "expected": "카페"
+  },
+  {
+    "merchant": "월세",
+    "expected": "고정비"
+  },
+  {
+    "merchant": "배달의민족",
+    "expected": "식비"
+  },
+  {
+    "merchant": "쿠팡",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "이마트 성수점",
+    "expected": "식비"
+  },
+  {
+    "merchant": "카카오T택시",
+    "expected": "교통"
+  },
+  {
+    "merchant": "스타벅스 강남점",
+    "expected": "카페"
+  },
+  {
+    "merchant": "스타벅스 강남점",
+    "expected": "카페"
+  },
+  {
+    "merchant": "카카오T택시",
+    "expected": "교통"
+  },
+  {
+    "merchant": "무신사",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "쿠팡",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "배달의민족",
+    "expected": "식비"
+  },
+  {
+    "merchant": "쿠팡와우",
+    "expected": "구독"
+  },
+  {
+    "merchant": "카카오T택시",
+    "expected": "교통"
+  },
+  {
+    "merchant": "배달의민족",
+    "expected": "식비"
+  },
+  {
+    "merchant": "카카오T택시",
+    "expected": "교통"
+  },
+  {
+    "merchant": "메가커피",
+    "expected": "카페"
+  },
+  {
+    "merchant": "메가커피",
+    "expected": "카페"
+  },
+  {
+    "merchant": "메가커피",
+    "expected": "카페"
+  },
+  {
+    "merchant": "쿠팡",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "배달의민족",
+    "expected": "식비"
+  },
+  {
+    "merchant": "요기요",
+    "expected": "식비"
+  },
+  {
+    "merchant": "월세",
+    "expected": "고정비"
+  },
+  {
+    "merchant": "CGV",
+    "expected": "여가"
+  },
+  {
+    "merchant": "CGV",
+    "expected": "여가"
+  },
+  {
+    "merchant": "무신사",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "배달의민족",
+    "expected": "식비"
+  },
+  {
+    "merchant": "스타벅스 강남점",
+    "expected": "카페"
+  },
+  {
+    "merchant": "SKT 통신요금",
+    "expected": "고정비"
+  },
+  {
+    "merchant": "CGV",
+    "expected": "여가"
+  },
+  {
+    "merchant": "올리브영",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "SKT 통신요금",
+    "expected": "고정비"
+  },
+  {
+    "merchant": "GS25 역삼점",
+    "expected": "식비"
+  },
+  {
+    "merchant": "무신사",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "배달의민족",
+    "expected": "식비"
+  },
+  {
+    "merchant": "이마트 성수점",
+    "expected": "식비"
+  },
+  {
+    "merchant": "쿠팡",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "무신사",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "GS25 역삼점",
+    "expected": "식비"
+  },
+  {
+    "merchant": "쿠팡",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "스타벅스 강남점",
+    "expected": "카페"
+  },
+  {
+    "merchant": "쿠팡",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "쿠팡",
+    "expected": "쇼핑"
+  },
+  {
+    "merchant": "이마트 성수점",
+    "expected": "식비"
+  },
+  {
+    "merchant": "메가커피",
+    "expected": "카페"
+  },
+  {
+    "merchant": "넷플릭스",
+    "expected": "구독"
+  },
+  {
+    "merchant": "요기요",
+    "expected": "식비"
+  },
+  {
+    "merchant": "GS25 역삼점",
+    "expected": "식비"
+  },
+  {
+    "merchant": "요기요",
+    "expected": "식비"
+  },
+  {
+    "merchant": "배달의민족",
+    "expected": "식비"
+  },
+  {
+    "merchant": "SKT 통신요금",
+    "expected": "고정비"
+  }
+]
