@@ -8,6 +8,8 @@ export default function Upload() {
   const [result, setResult] = useState<any>(null);
   const [drag, setDrag] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
+  const [lightbox, setLightbox] = useState<string | null>(null);
+  const [preview, setPreview] = useState<any | null>(null);
 
   const loadHistory = () => api.uploadHistory().then(setHistory).catch(() => {});
   useEffect(() => { loadHistory(); }, []);
@@ -71,12 +73,18 @@ export default function Upload() {
               <tr key={h.id}>
                 <td>{h.kind === 'csv' ? '📄 CSV' : '🧾 영수증'}</td>
                 <td>
-                  {h.image && (
+                  {h.kind === 'receipt' && h.image && (
                     <img src={`${API_BASE}/uploads/${h.image}`} alt="영수증" width={36} height={36}
-                      style={{ objectFit: 'cover', borderRadius: 6, marginRight: 6, verticalAlign: 'middle' }} />
+                      className="thumb"
+                      onClick={() => setLightbox(`${API_BASE}/uploads/${h.image}`)} />
                   )}
                   {h.filename}
                   {h.note && <div className="muted">{h.note}</div>}
+                </td>
+                <td>
+                  {h.kind === 'csv' && h.image && (
+                    <button onClick={() => api.csvPreview(h.id).then(setPreview).catch(() => {})}>미리보기</button>
+                  )}
                 </td>
                 <td className="num">{h.saved}건 저장{h.skipped_duplicates > 0 && ` · 중복 ${h.skipped_duplicates}건`}</td>
                 <td className="muted">{new Date(h.created_at).toLocaleString('ko-KR')}</td>
@@ -85,6 +93,29 @@ export default function Upload() {
           </tbody>
         </table>
       </section>
+      {lightbox && (
+        <div className="modal-overlay" onClick={() => setLightbox(null)}>
+          <img src={lightbox} alt="영수증 확대" className="modal-img" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
+      {preview && (
+        <div className="modal-overlay" onClick={() => setPreview(null)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <h3>{preview.filename} <span className="muted">(상위 {preview.rows.length}/{preview.total}행)</span></h3>
+            <div className="modal-scroll">
+              <table className="tbl">
+                <thead><tr>{preview.columns.map((c: string) => <th key={c}>{c}</th>)}</tr></thead>
+                <tbody>
+                  {preview.rows.map((r: any, i: number) => (
+                    <tr key={i}>{preview.columns.map((c: string) => <td key={c}>{String(r[c])}</td>)}</tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <button onClick={() => setPreview(null)}>닫기</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

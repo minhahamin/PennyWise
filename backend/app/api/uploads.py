@@ -40,6 +40,11 @@ async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
     mapping = csv_mapper.auto_map_columns(df)
     normalized_all = csv_mapper.normalize_csv(df, mapping)
 
+    # 원본 저장 (미리보기용)
+    csv_path = os.path.join(settings.upload_dir, f"{uuid.uuid4().hex}_{file.filename or 'upload.csv'}")
+    with open(csv_path, "wb") as f:
+        f.write(raw)
+
     # LangGraph 실행 (정규화→분류→저장)
     result = upload_graph.invoke({"raw_items": [
         {"date": n["date"].isoformat(), "merchant": n["merchant"],
@@ -48,7 +53,8 @@ async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
     skipped = result.get("skipped_duplicates", 0)
     saved = len(normalized_all) - skipped
     db.add(UploadHistory(kind="csv", filename=file.filename or "upload.csv",
-                         total_rows=len(df), saved=saved, skipped_duplicates=skipped))
+                         total_rows=len(df), saved=saved, skipped_duplicates=skipped,
+                         image_path=csv_path))
     db.commit()
     return {"filename": file.filename, "mapping": mapping.model_dump(),
             "parsed": len(df), "normalized": len(normalized_all),
@@ -112,3 +118,24 @@ def upload_history(limit: int = 20, db: Session = Depends(get_db)):
              "skipped_duplicates": h.skipped_duplicates,
              "image": os.path.basename(h.image_path) if h.image_path else "",
              "note": h.note, "created_at": h.created_at.isoformat()} for h in rows]
+
+
+@router.get("/preview/{history_id}")
+def preview_csv(history_id: int, n: int = 10, db: Session = Depends(get_db)):
+    """저장된 CSV 원본의 상위 n행 미리보기."""
+    h = db.query(UploadHistory).filter_by(id=history_id, kind="csv").first()
+    if not h or not h.image_path or not os.path.exists(h.image_path):
+        return JSONResponse({"error": "preview not available"}, status_code=404)
+    raw = open(h.image_path, "rb").read()
+    import io
+    for enc in ("utf-8-sig", "cp949", "utf-8"):
+        try:
+            df = pd.read_csv(io.BytesIO(raw), encoding=enc)
+            break
+        except Exception:
+            continue
+    else:
+        return JSONResponse({"error": "CSV 파싱 실패"}, status_code=400)
+    return {"filename": h.filename, "columns": list(df.columns),
+            "rows": df.head(n).fillna("").to_dict(orient="records"),
+            "total": len(df)}
