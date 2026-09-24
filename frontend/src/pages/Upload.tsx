@@ -62,7 +62,7 @@ export default function Upload() {
         <p className="muted">비전 LLM이 가맹점·날짜·총액·품목을 추출합니다.</p>
       </section>
       <section className="panel">
-        <h3>처리 상태: {stage || '대기 중'}</h3>
+        <h3>처리 상태: {stage || '없음'}</h3>
         <div className="stages">{STAGES.map((s) => <span key={s} className={STAGES.indexOf(s) <= STAGES.indexOf(stage) ? 'on' : ''}>{s}</span>)}</div>
         {result && <pre>{JSON.stringify(result, null, 2)}</pre>}
       </section>
