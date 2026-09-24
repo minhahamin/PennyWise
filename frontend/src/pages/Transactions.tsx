@@ -69,10 +69,20 @@ export default function Transactions() {
         </tbody>
       </table>
       {rows.length === 0 && <p className="muted">거래가 없습니다. 업로드 탭에서 샘플 CSV를 올려보세요.</p>}
-      <div className="toolbar" style={{ marginTop: 12 }}>
-        <button disabled={page <= 0} onClick={() => go(page - 1)}>‹ 이전</button>
-        <span className="muted">{page + 1} / {pages} 페이지 (총 {total}건)</span>
-        <button disabled={page + 1 >= pages} onClick={() => go(page + 1)}>다음 ›</button>
+      <div className="pager">
+        <button className="page-btn" disabled={page <= 0} onClick={() => go(page - 1)}>‹ 이전</button>
+        {Array.from({ length: pages }, (_, i) => i)
+          .filter((i) => i === 0 || i === pages - 1 || Math.abs(i - page) <= 2)
+          .reduce<(number | '…')[]>( (acc, i, idx, arr) => {
+            if (idx > 0 && i - (arr[idx - 1] as number) > 1) acc.push('…');
+            acc.push(i);
+            return acc;
+          }, [])
+          .map((i, k) => i === '…'
+            ? <span key={`e${k}`} className="page-ellipsis">…</span>
+            : <button key={i} className={`page-btn${i === page ? ' on' : ''}`} onClick={() => go(i as number)}>{(i as number) + 1}</button>)}
+        <button className="page-btn" disabled={page + 1 >= pages} onClick={() => go(page + 1)}>다음 ›</button>
+        <span className="muted">총 {total}건</span>
       </div>
     </div>
   );

@@ -38,6 +38,14 @@ main { margin-top: 16px; }
 .tbl .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
 .badge { border: 1px solid; padding: 3px 8px; border-radius: 999px; font-size: 12px; }
 .toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.pager { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+.page-btn { min-width: 38px; height: 38px; padding: 0 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+  font-weight: 600; cursor: pointer; }
+.page-btn:hover:not(:disabled) { border-color: #3b82f6; color: #3b82f6; }
+.page-btn.on { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+.page-btn:disabled { opacity: .4; cursor: default; }
+.page-ellipsis { color: var(--muted); padding: 0 2px; }
 .drop { border: 2px dashed var(--line); border-radius: 12px; padding: 24px;
   display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
 .drop.over { border-color: #3b82f6; background: #3b82f622; }
