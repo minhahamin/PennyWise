@@ -10,6 +10,17 @@
 | Frontend | React(Vite), TypeScript, Recharts |
 | 배포 | Docker Compose(로컬) / Railway(운영) |
 
+## 운영 배포 (Railway — 프로젝트 `pennyWise`)
+
+- 홈페이지: https://pennywise-production-9cf8.up.railway.app (서비스 `pennyWise`)
+- API: https://pennywise-api-production.up.railway.app (서비스 `pennywise-api`, `/health`)
+- DB: 별도 DB 서비스 없이 SQLite를 볼륨(`/data`, 5GB)에 저장 — 재배포에도 데이터 유지
+- 빌드: 백엔드/프론트 모두 Nixpacks (`backend/Procfile`, `frontend`는 `Dockerfile.local` 지정)
+  - ⚠️ `Dockerfile`이라는 이름 그대로 두면 Railpack prepare 단계에서 무응답 실패하므로
+    로컬 Compose용은 `Dockerfile.local`로 분리하고 Compose에서 `dockerfile:`로 지정
+- 프론트 빌드 시 `VITE_API_BASE`가 번들에 주입되므로 API 도메인 변경 시 프론트 재배포 필요
+- IaC 스냅샷: `.railway/railway.ts` (참고용, 실제 적용은 CLI로 수행)
+
 ## 아키텍처
 
 ```
