@@ -47,6 +47,7 @@ main { margin-top: 16px; }
 .stages { display: flex; gap: 8px; }
 .stages span { padding: 4px 10px; border-radius: 999px; background: var(--line); font-size: 12px; }
 .stages .on { background: #3b82f6; color: #000; }
+html.dark .stages span { color: #000; }
 pre { background: var(--bg); padding: 12px; border-radius: 8px; overflow: auto; font-size: 12px; }
 .muted { color: var(--muted); font-size: 13px; }
 .alert { padding: 10px 12px; border-radius: 10px; margin: 8px 0; }
