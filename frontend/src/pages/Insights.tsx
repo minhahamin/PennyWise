@@ -7,14 +7,15 @@ export default function Insights() {
   const [y, setY] = useState(now.getFullYear());
   const [m, setM] = useState(now.getMonth() + 1);
   const [report, setReport] = useState<any>(null);
+  const [past, setPast] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const load = () => api.report(y, m).then(setReport).catch(() => setReport(null));
-  useEffect(() => { load(); }, []);
 
-  const [past, setPast] = useState<any[]>([]);
   useEffect(() => {
+    setLoading(true);
+    const jobs: Promise<any>[] = [load()];
     const nowD = new Date();
-    const jobs: Promise<any>[] = [];
     for (let i = 0; i < 6; i++) {
       const d = new Date(nowD.getFullYear(), nowD.getMonth() - i, 1);
       jobs.push(api.report(d.getFullYear(), d.getMonth() + 1)
@@ -22,13 +23,31 @@ export default function Insights() {
                              alerts: (r.alerts ?? []).filter((a: any) => a.severity !== 'safe').length }))
         .catch(() => null));
     }
-    Promise.all(jobs).then((rows) => setPast(rows.filter(Boolean)));
+    Promise.all(jobs).then((rows) => {
+      setPast(rows.slice(1).filter(Boolean));
+      setLoading(false);
+    });
   }, []);
 
   const jump = (yy: number, mm: number) => {
     setY(yy); setM(mm);
     api.report(yy, mm).then(setReport).catch(() => setReport(null));
   };
+
+  if (loading) {
+    return (
+      <div>
+        <div className="skel" style={{ width: 280, height: 36 }} />
+        <div className="grid3" style={{ marginTop: 12 }}>
+          <div className="skel" style={{ height: 120 }} />
+          <div className="skel" style={{ height: 120 }} />
+          <div className="skel" style={{ height: 120 }} />
+        </div>
+        <div className="skel" style={{ height: 200, marginTop: 12 }} />
+        <p className="muted">리포트를 불러오는 중…</p>
+      </div>
+    );
+  }
 
   return (
     <div>

@@ -57,6 +57,9 @@ pre { background: var(--bg); padding: 12px; border-radius: 8px; overflow: auto; 
 .modal-box { background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
   padding: 16px; max-width: 90vw; max-height: 85vh; display: flex; flex-direction: column; gap: 12px; }
 .modal-scroll { overflow: auto; }
+.skel { border-radius: 12px; background: linear-gradient(90deg, var(--line) 25%, var(--panel) 50%, var(--line) 75%);
+  background-size: 200% 100%; animation: shimmer 1.2s infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
 .alert { padding: 10px 12px; border-radius: 10px; margin: 8px 0; }
 .alert.exceeded { background: #ef444422; border: 1px solid var(--danger); }
 .alert.warning { background: #f59e0b22; border: 1px solid var(--warn); }

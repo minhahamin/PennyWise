@@ -49,7 +49,9 @@ export default function Upload() {
             <input type="file" accept=".csv" hidden onChange={(e) => onCsv(e.target.files?.[0])} />
           </label>
         </div>
-        <p className="muted">은행/카드사 포맷이 달라도 컬럼을 자동 매핑합니다.</p>
+        <p className="muted">정해진 양식은 없습니다. 날짜·가맹점·금액 3개 컬럼만 있으면
+          은행/카드사마다 다른 헤더도 자동 매핑합니다 (애매하면 AI가 추론).
+          인코딩은 UTF-8/CP949 자동 감지. 예: <code>승인일자,가맹점명,이용금액</code></p>
       </section>
       <section className="panel">
         <h3>영수증 업로드 (모바일 촬영 지원)</h3>
