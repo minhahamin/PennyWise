@@ -114,15 +114,15 @@ def node_report(state: ReportState) -> dict:
 
 def build_report_graph():
     g = StateGraph(ReportState)
-    g.add_node("trend", node_trend)
-    g.add_node("budget", node_budget)
-    g.add_node("tips", node_tips)
-    g.add_node("report", node_report)
-    g.set_entry_point("trend")
-    g.add_edge("trend", "budget")
-    g.add_edge("budget", "tips")
-    g.add_edge("tips", "report")
-    g.add_edge("report", END)
+    g.add_node("analyze_trend", node_trend)
+    g.add_node("check_budget", node_budget)
+    g.add_node("make_tips", node_tips)
+    g.add_node("compile_report", node_report)
+    g.set_entry_point("analyze_trend")
+    g.add_edge("analyze_trend", "check_budget")
+    g.add_edge("check_budget", "make_tips")
+    g.add_edge("make_tips", "compile_report")
+    g.add_edge("compile_report", END)
     return g.compile()
 
 
