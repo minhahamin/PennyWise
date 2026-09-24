@@ -34,7 +34,10 @@ def _client():
         return None
     from openai import OpenAI
 
-    return OpenAI(api_key=settings.openai_api_key)
+    kwargs = {"api_key": settings.openai_api_key}
+    if settings.openai_base_url:
+        kwargs["base_url"] = settings.openai_base_url
+    return OpenAI(**kwargs)
 
 
 # ---------- 텍스트 분류용 ----------
