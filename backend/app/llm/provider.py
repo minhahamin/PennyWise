@@ -1,8 +1,9 @@
-"""LLM Provider — OpenAI 사용 가능 시 호출, 없으면 결정적 휴리스틱 폴백.
+"""LLM Provider — OpenAI/OpenRouter 호출, 실패 시 결정적 휴리스틱 폴백.
 
-설계 의도(비용 최적화):
+설계 의도(비용 최적화 + 내결함성):
 - API 키가 없어도 데모/테스트가 돌아가도록 mock 경로 제공
-- 실제 배포 시에는 gpt-4o-mini(텍스트) + gpt-4o-mini(vision) 사용
+- rate-limit/네트워크 오류 시에도 500 없이 휴리스틱으로 응답 (무료 모델 공유풀 대비)
+- OPENAI_BASE_URL 지정 시 OpenRouter 등 OpenAI 호환 엔드포인트 사용
 """
 from __future__ import annotations
 
@@ -41,42 +42,47 @@ def _client():
 
 
 # ---------- 텍스트 분류용 ----------
+def _heuristic_batch(items: list[dict]) -> list[dict]:
+    return [heuristic_classify(it["merchant"]) | {"id": it["id"]} for it in items]
+
+
 def batch_classify(items: list[dict]) -> list[dict]:
     """items: [{"id": int, "merchant": str, "amount": float, "memo": str}]."""
     client = _client()
     if client is None:
-        return [heuristic_classify(it["merchant"]) | {"id": it["id"]} for it in items]
+        return _heuristic_batch(items)
     payload = json.dumps(items, ensure_ascii=False)
-    resp = client.chat.completions.create(
-        model=settings.text_model,
-        messages=[{"role": "user", "content": prompts.BATCH_CLASSIFY_PROMPT.format(transactions=payload)}],
-        temperature=0,
-    )
     try:
+        resp = client.chat.completions.create(
+            model=settings.text_model,
+            messages=[{"role": "user", "content": prompts.BATCH_CLASSIFY_PROMPT.format(transactions=payload)}],
+            temperature=0,
+        )
         return json.loads(_extract_json(resp.choices[0].message.content or "[]"))
-    except json.JSONDecodeError:
-        return [heuristic_classify(it["merchant"]) | {"id": it["id"]} for it in items]
+    except Exception:
+        # rate-limit/네트워크/파싱 실패 시 휴리스틱 폴백 (500 방지)
+        return _heuristic_batch(items)
 
 
 def infer_column_mapping(headers: list[str], sample_row: dict) -> dict:
     client = _client()
     if client is None:
         return heuristic_column_mapping(headers)
-    resp = client.chat.completions.create(
-        model=settings.text_model,
-        messages=[
-            {
-                "role": "user",
-                "content": prompts.COLUMN_MAPPING_PROMPT.format(
-                    headers=headers, sample_row=json.dumps(sample_row, ensure_ascii=False)
-                ),
-            }
-        ],
-        temperature=0,
-    )
     try:
+        resp = client.chat.completions.create(
+            model=settings.text_model,
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompts.COLUMN_MAPPING_PROMPT.format(
+                        headers=headers, sample_row=json.dumps(sample_row, ensure_ascii=False)
+                    ),
+                }
+            ],
+            temperature=0,
+        )
         return json.loads(_extract_json(resp.choices[0].message.content or "{}"))
-    except json.JSONDecodeError:
+    except Exception:
         return heuristic_column_mapping(headers)
 
 
@@ -84,16 +90,21 @@ def generate_tips(stats: dict) -> list[dict]:
     client = _client()
     if client is None:
         return heuristic_tips(stats)
-    resp = client.chat.completions.create(
-        model=settings.text_model,
-        messages=[{"role": "user", "content": prompts.TIPS_PROMPT.format(stats=json.dumps(stats, ensure_ascii=False))}],
-        temperature=0.3,
-    )
     try:
+        resp = client.chat.completions.create(
+            model=settings.text_model,
+            messages=[{"role": "user", "content": prompts.TIPS_PROMPT.format(stats=json.dumps(stats, ensure_ascii=False))}],
+            temperature=0.3,
+        )
         out = json.loads(_extract_json(resp.choices[0].message.content or "[]"))
         return out if isinstance(out, list) else heuristic_tips(stats)
-    except json.JSONDecodeError:
+    except Exception:
         return heuristic_tips(stats)
+
+
+def _receipt_fallback(raw: str = "") -> dict:
+    return {"merchant": "판독실패", "date": None, "total_amount": 0,
+            "items": [], "confidence": 0.1, "raw_text": raw}
 
 
 # ---------- 비전(영수증) ----------
@@ -103,22 +114,21 @@ def extract_receipt(image_bytes: bytes) -> dict:
         return {"merchant": "모의상점", "date": None, "total_amount": 0,
                 "items": [], "confidence": 0.3, "raw_text": "mock (API 키 없음)"}
     b64 = base64.b64encode(image_bytes).decode()
-    resp = client.chat.completions.create(
-        model=settings.vision_model,
-        messages=[{
-            "role": "user",
-            "content": [
-                {"type": "text", "text": prompts.RECEIPT_PROMPT},
-                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
-            ],
-        }],
-        temperature=0,
-    )
     try:
+        resp = client.chat.completions.create(
+            model=settings.vision_model,
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompts.RECEIPT_PROMPT},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
+                ],
+            }],
+            temperature=0,
+        )
         return json.loads(_extract_json(resp.choices[0].message.content or "{}"))
-    except json.JSONDecodeError:
-        return {"merchant": "판독실패", "date": None, "total_amount": 0,
-                "items": [], "confidence": 0.1, "raw_text": resp.choices[0].message.content or ""}
+    except Exception as e:
+        return _receipt_fallback(raw=f"LLM 오류: {type(e).__name__}")
 
 
 # ---------- 휴리스틱 폴백 (키워드 규칙 기반) ----------
